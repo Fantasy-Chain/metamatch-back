@@ -19,12 +19,27 @@ interface RecaptchaResponse {
   "error-codes"?: string[];
 }
 const corsOptions = {
-  origin: ["https://metamatch.com.br/", "http://localhost:3000"],
+  origin: "https://metamatch.com.br",
   optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
 router.use(cors(corsOptions));
+
+router.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "https://metamatch.com.br");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  next();
+});
+
+router.options("*", (req, res) => {
+  res.header("Access-Control-Allow-Origin", "https://metamatch.com.br");
+  res.send();
+});
 
 router.get("/", (req: Request, res: Response) => {
   res.send("Hello World");
