@@ -2,9 +2,11 @@ import express, { Request, Response } from "express";
 import bodyParser from "body-parser";
 import fetch from "node-fetch";
 import "dotenv/config";
+import serverless from "serverless-http";
+import cors from "cors";
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const router = express.Router();
 const SECRET_KEY = process.env.RECAPTCHA_SECRET_KEY!;
 
 app.use(bodyParser.json());
@@ -16,9 +18,19 @@ interface RecaptchaResponse {
   hostname: string;
   "error-codes"?: string[];
 }
+const corsOptions = {
+  origin: ["https://metamatch.com.br/", "http://localhost:3000"],
+  optionsSuccessStatus: 200,
+};
 
+app.use(cors(corsOptions));
+router.use(cors(corsOptions));
+
+router.get("/", (req: Request, res: Response) => {
+  res.send("Hello World");
+});
 // Endpoint para validar o token reCAPTCHA
-app.post("/validate-recaptcha", async (req: Request, res: Response) => {
+router.post("/validate-recaptcha", async (req: Request, res: Response) => {
   const token = req.body.token;
 
   if (!token) {
@@ -51,7 +63,10 @@ app.post("/validate-recaptcha", async (req: Request, res: Response) => {
   }
 });
 
-// Iniciar o servidor
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+app.use("/.netlify/functions/api", router);
+
+module.exports.handler = serverless(app);
+
+export default {
+  handler: serverless(app),
+};
