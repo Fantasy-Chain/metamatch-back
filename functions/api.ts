@@ -4,6 +4,7 @@ import fetch from "node-fetch";
 import "dotenv/config";
 import serverless from "serverless-http";
 import cors from "cors";
+import axios from "axios";
 
 const app = express();
 const router = express.Router();
@@ -73,6 +74,40 @@ router.post("/validate-recaptcha", async (req: Request, res: Response) => {
         "error-codes": data["error-codes"],
       });
     }
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
+router.post("/create-contact", async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Email are required" });
+  }
+
+  try {
+    const createContact = await axios.post(
+      "https://api.hubapi.com/crm/v3/objects/contacts",
+      {
+        properties: {
+          email,
+        },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.HUBSPOT_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    res.json({
+      success: true,
+      message: "Contact created",
+      data: createContact.data,
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
